@@ -227,7 +227,7 @@ Ext.define('Mention.Field', {
             replacer = startSearch + record.get(me.valueField) + endSearch,
             replacement = record.get(me.getDisplayField()),
             compareString = '',
-            charOffset = lookup.type === 'text' ? 1 : 3,
+            charOffset = lookup.type === 'text' ? triggerSearch.length : startSearch.length+1,
             openRe = lookup.type === 'text' ? me.mentionTriggerRe : me.mentionStartRe,
             closeRe = lookup.type === 'value' ? me.mentionEndRe : '',
             closeIdx,

@@ -10,7 +10,12 @@ Ext.define('MentionExample.view.main.Main', {
     xtype: 'app-main',
     requires: [
         'Mention.Field',
-        'MentionExample.store.People'
+        'MentionExample.store.People',
+        'MentionExample.view.example.Simple',
+        'MentionExample.view.example.Remote',
+        'MentionExample.view.example.Thumbnail',
+        'MentionExample.view.example.Editor',
+        'MentionExample.view.example.Custom'
     ],
     ui: 'navigation',
     viewModel: {
@@ -73,52 +78,30 @@ Ext.define('MentionExample.view.main.Main', {
     },
 
     items: [{
-        xtype: 'form',
         iconCls: 'fa-home',
         title: '"Mention" Textarea',
-        bodyPadding: 10,
-        tbar: [{
-            text: 'Get Values',
-            handler: function(btn, e, eOpts) {
-                var form = btn.up('form');
-                Ext.Msg.alert('Form Values', JSON.stringify(form.getValues()))
-            }
-        }],
-        items: [{
-            xtype: 'component',
-            margin: '0 0 20 0',
-            html: [
-                'This field is a custom "Comments" fields that has support for "mentioning" users.<br /><br />',
-                'You can bind a store to this textfield, and use the "@" to trigger a lookup of the store. ',
-                'This will  display a picker from which you can choose a matching value. Selecting a value will replace the search ',
-                'text with a special syntax "[~some_selected_value]", that can be used for other purposes in other intefaces.<br /><br />',
-                'As with Ext.form.field.ComboBox, this custom field can be configured with remote or local querying, ',
-                'and even paging of the results.'                    
-            ].join('')                
-        },{
-            xtype: 'mention-field',
-            height: 200,
-            anchor: '100%',
-            name: 'comments',
-            fieldLabel: 'Comments',
-            labelAlign: 'top',
-            bind: {
-                store: '{people}'
-            },
-            listConfig: {
-                maxHeight: 130,
-                emptyText: '<div style="padding:3px 10px;">Sorry, no matches were found</div>'
-            },
-            imageField: 'thumbnail',
-            includeImage: true,
-            defaultImage: 'resources/images/user.png',
-            displayField: 'name',
-            valueField: 'email',
-            queryMode: 'remote',
-            pageSize: 25,
-            mentionTrigger: '+',
-            mentionStartPattern: '{_',
-            mentionEndPattern: '}'
-        }]
+        html: [
+            'This field is a custom "Comments" fields that has support for "mentioning" users.<br /><br />',
+            'You can bind a store to this textfield, and use the "@" to trigger a lookup of the store. ',
+            'This will  display a picker from which you can choose a matching value. Selecting a value will replace the search ',
+            'text with a special syntax "[~some_selected_value]", that can be used for other purposes in other intefaces.<br /><br />',
+            'As with Ext.form.field.ComboBox, this custom field can be configured with remote or local querying, ',
+            'and even paging of the results.<br /><br />Try out the examples and enjoy! ;)'                    
+        ].join('')
+    },{
+        xtype: 'example-simple',
+        iconCls: 'fa-home'
+    },{
+        xtype: 'example-remote',
+        iconCls: 'fa-home'
+    },{
+        xtype: 'example-thumbnail',
+        iconCls: 'fa-home'
+    },{
+        xtype: 'example-editor',
+        iconCls: 'fa-home'
+    },{
+        xtype: 'example-custom',
+        iconCls: 'fa-home'
     }]
 });
