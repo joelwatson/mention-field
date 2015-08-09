@@ -114,7 +114,7 @@
          * then to style "Ext.panel.Panel" you would put SASS in
          * ./sass/src/Ext/panel/Panel.scss.
          */
-        "namespace": "mention-field",
+        "namespace": "",
 
         /**
          * Comma-separated list of files or folders containing extra Sass. These

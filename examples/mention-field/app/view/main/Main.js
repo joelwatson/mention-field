@@ -109,10 +109,16 @@ Ext.define('MentionExample.view.main.Main', {
                 maxHeight: 130,
                 emptyText: '<div style="padding:3px 10px;">Sorry, no matches were found</div>'
             },
+            imageField: 'thumbnail',
+            includeImage: true,
+            defaultImage: 'resources/images/user.png',
             displayField: 'name',
             valueField: 'email',
             queryMode: 'remote',
-            pageSize: 25
+            pageSize: 25,
+            mentionTrigger: '+',
+            mentionStartPattern: '{_',
+            mentionEndPattern: '}'
         }]
     }]
 });

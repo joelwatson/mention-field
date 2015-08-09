@@ -5,10 +5,15 @@ Ext.define('Mention.Field', {
     config: {
         displayField: 'text',
         displayTpl: false,
-        selection: null
+        imageField: 'image',
+        defaultImage: null,
+        includeImage: false,
+        selection: null,
+        mentionTrigger: '@',
+        mentionStartPattern: '[~',
+        mentionEndPattern: ']'
     },
     ignoreKeys: [38, 40, 13, 27, 9],
-    patternRe: '\[~|@',
     currentMatchOriginPos: null,
     constructor: function(config) {
         var me = this;
@@ -18,6 +23,7 @@ Ext.define('Mention.Field', {
         me.multiSelect = false;
         // block typeAhead
         me.typeAhead = false;
+        
         me.callParent(arguments);
     },
     initComponent: function() {
@@ -33,9 +39,61 @@ Ext.define('Mention.Field', {
         if (!Ext.isDefined(me.minChars)) {
             me.minChars = isLocalMode ? 0 : 4;
         }
+        // ensure that necessary patterns are setup before continuing
+        if (!me.mentionTrigger) {
+            Ext.raise('A mentionTrigger (ex: "@") must be defined in order for this field to work -- please provide one.');
+        }
+        if (!me.mentionStartPattern) {
+            Ext.raise('A mentionStartPattern (ex: "[~") must be defined in order for this field to work -- please provide one.');
+        }
+        if (!me.mentionEndPattern) {
+            Ext.raise('A mentionEndPattern (ex: "]") must be defined in order for this field to work -- please provide one.');
+        }
+        // need to setup regexes with escapes based on provided patterns
+        me.mentionTriggerRe = me.escapeStringForRegex(me.mentionTrigger);
+        me.mentionStartRe = me.escapeStringForRegex(me.mentionStartPattern);
+        me.mentionEndRe = me.escapeStringForRegex(me.mentionEndPattern);
+        
+        if(!me.tpl) {
+            me.defaultListConfig.getInnerTpl = function(displayField) {
+                var field = this.pickerField,
+                    imageField = field.getImageField(),
+                    defaultImage = field.getDefaultImage(),
+                    includeImage = field.getIncludeImage(),
+                    imageTpl = '';
+                // only use if includeImage is turned on and defaultImage is defined
+                if(includeImage && defaultImage && imageField) {
+                    imageTpl = [
+                        '<div class="x-boundlist-image" style="background-image: url(',
+                            '<tpl if="' + imageField + '">',
+                                '{'+ imageField + '}',
+                            '<tpl else>',
+                                defaultImage,
+                            '</tpl>',
+                        ');">',
+                            '{' + displayField + '}',
+                        '</div>'
+                    ].join('');
+                }
+                else {
+                    imageTpl = '{' + displayField + '}';
+                }
+                return imageTpl;
+            }
+        }
         me.callParent();
         // setup query task
         me.doQueryTask = new Ext.util.DelayedTask(me.doRawQuery, me);
+    },
+    /**
+     * Escapes the passed string so that it will be safe for a regex
+     * @param {String} value
+     * @return {String}
+     */
+    escapeStringForRegex: function(value) {
+        var regexEscapeRe = /[-\/\\^$*+?.()|[\]{}]/g,
+            regexEscapeReplace = '\\$&';
+        return value.replace(regexEscapeRe, regexEscapeReplace);
     },
     /**
      * Binds a store to this instance.
@@ -65,13 +123,12 @@ Ext.define('Mention.Field', {
             lookup = me.getLookupPosition(),
             type = lookup.type,
             queryEnd = startPosition - lookup.position,
-            substring = value.substr(lookup.position, queryEnd);
-            //queryEnd = type === 'text' ? startPosition - lookup.position : value.indexOf(']', lookup.position),
-            //substring = type === 'text' ? value.substr(lookup.position, queryEnd) : value.substring(lookup.position, queryEnd);
+            substring = value.substr(lookup.position, queryEnd),
+            replaceRe = new RegExp('^' + me.mentionStartRe + '|' + me.mentionTriggerRe);
         
         return {
             property: type === 'text' ? me.getDisplayField() : me.valueField,
-            value: substring.replace(/^\[~|@/, '')
+            value: substring.replace(replaceRe, '')
         };
     },
     /**
@@ -82,16 +139,18 @@ Ext.define('Mention.Field', {
         var me = this,
             value = this.getValue(),
             startPosition = me.getCaretPosition().start,
-            bracketRe = /\[~\S+\]/g,
             lookup = {
                 position: -1,
                 mode: null
             },
             validMatch = false,
+            triggerSearch = me.getMentionTrigger(),
+            startSearch = me.getMentionStartPattern(),
+            endSearch = me.getMentionEndPattern(),
             testStr, pos, parentPos, boundaryIdx, innerIdx;
 
         // get first, previous instance of '@'
-        pos = value.lastIndexOf('@', startPosition);
+        pos = value.lastIndexOf(triggerSearch, startPosition);
         if (pos > -1) {
             testStr = value.substring(pos, startPosition);
             boundaryIdx = testStr.search(/\s/);
@@ -107,7 +166,7 @@ Ext.define('Mention.Field', {
             // have a technically valid '@' match.
             // now let's see if it's a substring of a '[~]' match
             if (validMatch) {
-                parentPos = value.lastIndexOf('[~', startPosition);
+                parentPos = value.lastIndexOf(startSearch, startPosition);
                 testStr = value.substring(parentPos, startPosition);
                 boundaryIdx = testStr.search(/\s/);
                 // if there are no whitespace characters in string
@@ -120,10 +179,10 @@ Ext.define('Mention.Field', {
         }
         // we didn't match on '@'...check '[~]'
         if (lookup.position === -1) {
-            pos = value.lastIndexOf('[~', startPosition);
+            pos = value.lastIndexOf(startSearch, startPosition);
             if (pos > -1) {
                 // start from first match position, find closing ']'
-                boundaryIdx = value.indexOf(']', pos);
+                boundaryIdx = value.indexOf(endSearch, pos);
                 // if current position is within a '[~...]'
                 if (startPosition > pos && startPosition <= boundaryIdx) {
                     lookup.position = pos;
@@ -161,12 +220,16 @@ Ext.define('Mention.Field', {
             input = field.inputEl,
             value = field.getValue(),
             lookup = me.getLookupPosition(),
-            replacer = '[~' + record.get(me.valueField) + ']',
+            triggerSearch = me.getMentionTrigger(),
+            startSearch = me.getMentionStartPattern(),
+            endSearch = me.getMentionEndPattern(),
+            replaceRe = new RegExp('^' + me.mentionStartRe + '|' + me.mentionTriggerRe),
+            replacer = startSearch + record.get(me.valueField) + endSearch,
             replacement = record.get(me.getDisplayField()),
             compareString = '',
             charOffset = lookup.type === 'text' ? 1 : 3,
-            openRe = lookup.type === 'text' ? '@' : '[~',
-            closeRe = lookup.type === 'value' ? ']' : '',
+            openRe = lookup.type === 'text' ? me.mentionTriggerRe : me.mentionStartRe,
+            closeRe = lookup.type === 'value' ? me.mentionEndRe : '',
             closeIdx,
             remainder,
             cleanedQuery,
@@ -175,7 +238,7 @@ Ext.define('Mention.Field', {
         
         if (lookup.position > -1) {
             remainder = value.substr(lookup.position);
-            cleanedQuery = remainder.replace(/^\[~|@/, '');
+            cleanedQuery = remainder.replace(replaceRe, '');
             // if the lookup type is by text, go character by character to determine the replacement string
             if (lookup.type === 'text') {
                 if (cleanedQuery.length) {
@@ -193,7 +256,7 @@ Ext.define('Mention.Field', {
             }
             // if lookup type is by value, we already know the full replacer string
             else {
-                closeIdx = cleanedQuery.indexOf(']');
+                closeIdx = cleanedQuery.indexOf(endSearch);
                 compareString = cleanedQuery.substring(0, closeIdx);
             }
             front = value.substr(0, lookup.position);
@@ -293,9 +356,6 @@ Ext.define('Mention.Field', {
                 e.preventDefault();
             }        
         }
-        if (e.keyCode === 9) {
-            me.onTab(e, target);
-        }
     },
     /**
      * Handler for key up
@@ -310,7 +370,6 @@ Ext.define('Mention.Field', {
                 me.currentMatchOriginPos = lookup.position;
                 // first, only if character is the match symbol OR is part of a match string
                 me.doQueryTask.delay(me.queryDelay);
-                //me.doQuery(me.getQuery().value, true, true);
             } else {
                 e.preventDefault();
                 // esc
@@ -342,11 +401,6 @@ Ext.define('Mention.Field', {
             }
         }
 
-    },
-    onTab: function(e, target) {
-        var me = this;
-        console.log(me.inSearchMode)
-      	 console.log('what')
     },
     /**
      * Handler for ESC
