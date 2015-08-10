@@ -1,16 +1,66 @@
 Ext.define('Mention.Field', {
     extend: 'Ext.form.field.TextArea',
     alias: 'widget.mention-field',
-    mixins: ['Ext.util.StoreHolder'],
+    mixins: ['Ext.util.StoreHolder', 'Mention.mixin.Caret'],
     config: {
+        /**
+         * @cfg {String} displayField
+         * The underlying {@link Ext.data.Field#name data field name} to bind to this ComboBox.
+         *
+         * See also `{@link #valueField}`.
+         */
         displayField: 'text',
+        /**
+         * @cfg {String/String[]/Ext.XTemplate} [displayTpl]
+         * The template to be used to display selected records inside the text field. An array of the selected records' data
+         * will be passed to the template. Defaults to:
+         *
+         *     '<tpl for=".">' +
+         *         '{[typeof values === "string" ? values : values["' + me.displayField + '"]]}' +
+         *         '<tpl if="xindex < xcount">' + me.delimiter + '</tpl>' +
+         *     '</tpl>'
+         *
+         * By default only the immediate data of the record is passed (no associated data). The {@link #getRecordDisplayData} can
+         * be overridden to extend this.
+         */
         displayTpl: false,
+        /**
+         * @cfg {String} imageField
+         * The underlying {@link Ext.data.Field#name image field name} to bind to this ComboBox.
+         */
         imageField: 'image',
+        /**
+         * @cfg {String} defaultImage
+         * The default image to use if a value is not found for an image in the record when using `{@link #imageField}`
+         */
         defaultImage: null,
+        /**
+         * @cfg {Boolean} includeImage
+         * Whether or not to setup support for the default thumbnail tpl. Is required to be true if imageField is to be used
+         */
         includeImage: false,
+        /**
+         * @cfg {Ext.data.Model} selection
+         * The selected model. Typically used with {@link #bind binding}.
+         */
         selection: null,
+        /**
+         * @cfg {String} mentionTrigger
+         * The pattern to use for triggering a mention lookup when typing
+         * Defaults to '@'
+         */
         mentionTrigger: '@',
+        /**
+         * @cfg {String} mentionStartPattern
+         * The pattern to use for the beginning "wrap" of a selected value in the raw text.
+         * Defaults to '[~'
+         */
         mentionStartPattern: '[~',
+        /**
+         * @cfg {String} mentionEndPattern
+         * The pattern to use for the closing "wrap" of a selected value in the raw text.
+         * Defaults to ']'
+         */
         mentionEndPattern: ']'
     },
     ignoreKeys: [38, 40, 13, 27, 9],
@@ -53,7 +103,7 @@ Ext.define('Mention.Field', {
         me.mentionTriggerRe = me.escapeStringForRegex(me.mentionTrigger);
         me.mentionStartRe = me.escapeStringForRegex(me.mentionStartPattern);
         me.mentionEndRe = me.escapeStringForRegex(me.mentionEndPattern);
-        
+        // setup support for image thumbnail tpl
         if(!me.tpl) {
             me.defaultListConfig.getInnerTpl = function(displayField) {
                 var field = this.pickerField,
@@ -230,11 +280,7 @@ Ext.define('Mention.Field', {
             charOffset = lookup.type === 'text' ? triggerSearch.length : startSearch.length+1,
             openRe = lookup.type === 'text' ? me.mentionTriggerRe : me.mentionStartRe,
             closeRe = lookup.type === 'value' ? me.mentionEndRe : '',
-            closeIdx,
-            remainder,
-            cleanedQuery,
-            reRegex,
-            front, back, i;
+            closeIdx, remainder, cleanedQuery, reRegex, front, back, i;
         
         if (lookup.position > -1) {
             remainder = value.substr(lookup.position);
@@ -264,6 +310,7 @@ Ext.define('Mention.Field', {
             reRegex = new RegExp(openRe + compareString + closeRe, 'i');
             value = front + replacer + back;
             field.setRawValue(value);
+            field.setCaretPosition(value.indexOf(back));
             me.collapse();
         }
     },
@@ -419,56 +466,6 @@ Ext.define('Mention.Field', {
         me.bindStore(null);
         me.valueCollection = Ext.destroy(me.valueCollection);
         me.callParent();
-    },
-    getCaretPosition: function(field) {
-        var el = (field || this).inputEl.dom,
-            start = 0,
-            end = 0,
-            normalizedValue, range,
-            textInputRange, len, endRange;
-
-        if (typeof el.selectionStart == 'number' && typeof el.selectionEnd == 'number') {
-            //modern
-            start = el.selectionStart;
-            end = el.selectionEnd;
-        } else if (document.selection) {
-            //IE
-            range = document.selection.createRange();
-
-            if (range && range.parentElement() == el) {
-                len = el.value.length;
-                normalizedValue = el.value.replace(/\r\n/g, '\n');
-
-                // Create a working TextRange that lives only in the input
-                textInputRange = el.createTextRange();
-                textInputRange.moveToBookmark(range.getBookmark());
-
-                // Check if the start and end of the selection are at the very end
-                // of the input, since moveStart/moveEnd doesn't return what we want
-                // in those cases
-                endRange = el.createTextRange();
-                endRange.collapse(false);
-
-                if (textInputRange.compareEndPoints('StartToEnd', endRange) > -1) {
-                    start = end = len;
-                } else {
-                    start = -textInputRange.moveStart('character', - len);
-                    start += normalizedValue.slice(0, start).split('\n').length - 1;
-
-                    if (textInputRange.compareEndPoints('EndToEnd', endRange) > -1) {
-                        end = len;
-                    } else {
-                        end = -textInputRange.moveEnd('character', - len);
-                        end += normalizedValue.slice(0, end).split('\n').length - 1;
-                    }
-                }
-            }
-        }
-
-        return {
-            start: start,
-            end: end
-        };
     }
 }, function() {
     /** 
