@@ -21,3 +21,6 @@ If needed, you can adjust this to suit your own formats with the following confi
 * mentionTrigger: The character to match on to initiate a lookup (e.g. "@" or "+")
 * mentionStartPattern: The opening part of the pattern to use for setting the raw value of the selection which will identify the beginning of a "mention" section
 * mentionEndPattern: The closing part of the pattern to use for setting the raw value of the selection which will identify the ending of a "mention" section
+
+# Examples
+There is an example application (Ext JS 6) in "examples" that demonstrates several of the different ways that Mention can be configured. 
