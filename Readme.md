@@ -1,6 +1,8 @@
 # Mention Field
 This field has support for 'mentioning' users. You can bind a store to this textfield, and use the '@' to trigger a lookup of the store. This will  display a picker from which you can choose a matching value. Selecting a value will replace the search text with a special syntax '[~some_selected_value]' that can be used for other purposes in other interfaces. 
 
+![Mention](/docs/mention.png)
+
 # Querying and Paging
 As with Ext.form.field.ComboBox, this custom field can be configured with remote or local querying, and even paging of the results.
 
