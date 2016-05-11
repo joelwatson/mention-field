@@ -318,6 +318,7 @@ Ext.define('Mention.Field', {
             }
             
             me.collapse();
+            me.valueCollection.clear();
         }
     },
     /**
