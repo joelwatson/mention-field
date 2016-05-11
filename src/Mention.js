@@ -310,7 +310,13 @@ Ext.define('Mention.Field', {
             reRegex = new RegExp(openRe + compareString + closeRe, 'i');
             value = front + replacer + back;
             field.setRawValue(value);
-            field.setCaretPosition(value.indexOf(back));
+
+            if (!Ext.isEmpty(back)) {
+                field.setCaretPosition(value.indexOf(back));
+            } else {
+                field.setCaretPosition(value.length);
+            }
+            
             me.collapse();
         }
     },
@@ -478,7 +484,7 @@ Ext.define('Mention.Field', {
     // burgle picker methods
     this.borrow(Ext.form.field.Picker, ['expand', 'collapse', 'alignPicker', 'doAlign', 'onFocusLeave', 'beforeDestroy', 'getRefItems', 'collapseIf']);
     // burgle combobox methods
-    this.borrow(Ext.form.field.ComboBox, ['doAutoSelect', 'createPicker', 'getPickerStore', 'onBeforePickerShow', 'onBeforeSelect', 'onBeforeDeselect', 'onFocusChange', 'onPageChange', 'loadPage', 'onDataChanged', 'onException', 'onBindStore', 'onUnbindStore', 'onValueCollectionBeginUpdate', 'onValueCollectionEndUpdate', 'updateBindSelection', 'isSelectionUpdating', 'resetToDefault', 'getParams', 'getPickerStore', 'getPicker', 'doLocalQuery', 'doRemoteQuery', 'doQuery', 'beforeQuery', 'onCollapse', 'onExpand']);
+    this.borrow(Ext.form.field.ComboBox, ['doAutoSelect', 'createPicker', 'getPickerStore', 'onBeforePickerShow', 'onBeforeSelect', 'onBeforeDeselect', 'onFocusChange', 'onPageChange', 'loadPage', 'onDataChanged', 'onException', 'onBindStore', 'onUnbindStore', 'onValueCollectionBeginUpdate', 'onValueCollectionEndUpdate', 'updateBindSelection', 'isSelectionUpdating', 'resetToDefault', 'getParams', 'getPickerStore', 'getPicker', 'doLocalQuery', 'doRemoteQuery', 'doQuery', 'beforeQuery', 'onCollapse', 'onExpand', 'clearLocalFilter', 'onGlobalScroll']);
     // burgle combobox properties
     this.borrow(Ext.form.field.ComboBox, ['autoSelect', 'selectOnTab', 'pickerAlign', 'matchFieldWidth', 'openCls', 'isExpanded', 'allQuery', 'queryParam', 'queryMode', 'queryCaching', 'pageSize', 'anyMatch', 'caseSensitive', 'clearFilterOnBlur', 'defaultListConfig']);
 });

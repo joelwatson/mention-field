@@ -29,6 +29,9 @@ Ext.define('MentionExample.view.example.Simple', {
         name: 'comments',
         fieldLabel: 'Comments',
         labelAlign: 'top',
+        mentionTrigger: '@',
+        //mentionStartPattern: ':',
+        //mentionEndPattern: ':',
         bind: {
             store: '{people}'
         },
@@ -36,6 +39,7 @@ Ext.define('MentionExample.view.example.Simple', {
             maxHeight: 130,
             emptyText: '<div style="padding:3px 10px;">Sorry, no matches were found</div>'
         },
+        typeAhead: false,
         displayField: 'name',
         valueField: 'email',
         queryMode: 'local'
