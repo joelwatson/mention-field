@@ -9,7 +9,7 @@ Ext.define('Mention.mixin.Caret', {
      *
      * @return {{start: number, end: number}}
      */
-    getCaretPosition: function() {
+    getCaretPosition: function () {
         var el = this.inputEl.dom,
             start = 0,
             end = 0,
@@ -67,7 +67,7 @@ Ext.define('Mention.mixin.Caret', {
      * If left out, will default to the start value.
      * @return {Mention.Field}
      */
-    setCaretPosition : function(start, end) {
+    setCaretPosition : function (start, end) {
         var el = this.inputEl.dom,
             range;
 

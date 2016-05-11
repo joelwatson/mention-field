@@ -65,7 +65,7 @@ Ext.define('Mention.Field', {
     },
     ignoreKeys: [38, 40, 13, 27, 9],
     currentMatchOriginPos: null,
-    constructor: function(config) {
+    constructor: function (config) {
         var me = this;
         // force field to be editable
         me.editable = true;
@@ -76,13 +76,14 @@ Ext.define('Mention.Field', {
         
         me.callParent(arguments);
     },
-    initComponent: function() {
+    initComponent: function () {
         var me = this,
             store = me.store,
             isLocalModel;
         
         me.bindStore(store || 'ext-empty-store', true, true);
         isLocalMode = me.queryMode === 'local';
+
         if (!Ext.isDefined(me.queryDelay)) {
             me.queryDelay = isLocalMode ? 10 : 500;
         }
@@ -104,15 +105,15 @@ Ext.define('Mention.Field', {
         me.mentionStartRe = me.escapeStringForRegex(me.mentionStartPattern);
         me.mentionEndRe = me.escapeStringForRegex(me.mentionEndPattern);
         // setup support for image thumbnail tpl
-        if(!me.tpl) {
-            me.defaultListConfig.getInnerTpl = function(displayField) {
+        if (!me.tpl) {
+            me.defaultListConfig.getInnerTpl = function (displayField) {
                 var field = this.pickerField,
                     imageField = field.getImageField(),
                     defaultImage = field.getDefaultImage(),
                     includeImage = field.getIncludeImage(),
                     imageTpl = '';
                 // only use if includeImage is turned on and defaultImage is defined
-                if(includeImage && defaultImage && imageField) {
+                if (includeImage && defaultImage && imageField) {
                     imageTpl = [
                         '<div class="x-boundlist-image" style="background-image: url(',
                             '<tpl if="' + imageField + '">',
@@ -140,7 +141,7 @@ Ext.define('Mention.Field', {
      * @param {String} value
      * @return {String}
      */
-    escapeStringForRegex: function(value) {
+    escapeStringForRegex: function (value) {
         var regexEscapeRe = /[-\/\\^$*+?.()|[\]{}]/g,
             regexEscapeReplace = '\\$&';
         return value.replace(regexEscapeRe, regexEscapeReplace);
@@ -152,7 +153,7 @@ Ext.define('Mention.Field', {
      * @param {Boolean} [preventFilter] `true` to prevent any active filter from being activated
      * on the newly bound store. This is only valid when used with {@link #queryMode} `'local'`.
      */
-    bindStore: function(store, preventFilter, /* private */ initial) {
+    bindStore: function (store, preventFilter, /* private */ initial) {
         var me = this,
             filter = me.queryFilter;
             
@@ -166,7 +167,7 @@ Ext.define('Mention.Field', {
      * Rationalizes the query based on the current caret position and parsing rules for lookups
      * @return {Object}
      */
-    getQuery: function() {
+    getQuery: function () {
         var me = this,
             value = this.getValue(),
             startPosition = me.getCaretPosition().start,
@@ -185,7 +186,7 @@ Ext.define('Mention.Field', {
      * Determines if the current caret position is within a query-able match (e.g., @something or [~something])
      * @return {Object}
      */
-    getLookupPosition: function() {
+    getLookupPosition: function () {
         var me = this,
             value = this.getValue(),
             startPosition = me.getCaretPosition().start,
@@ -246,7 +247,7 @@ Ext.define('Mention.Field', {
      * Custom execution if this field is used as an editor
      * @param {Ext.EventObject} e
      */
-    completeEdit: function(e) {
+    completeEdit: function (e) {
         var me = this,
             filter = me.queryFilter;
 
@@ -305,6 +306,7 @@ Ext.define('Mention.Field', {
                 closeIdx = cleanedQuery.indexOf(endSearch);
                 compareString = cleanedQuery.substring(0, closeIdx);
             }
+
             front = value.substr(0, lookup.position);
             back = value.substr(lookup.position + (compareString.length + charOffset));
             reRegex = new RegExp(openRe + compareString + closeRe, 'i');
@@ -325,7 +327,7 @@ Ext.define('Mention.Field', {
      * Setup listeners for store
      * @return {Object}
      */
-    getStoreListeners: function(store) {
+    getStoreListeners: function (store) {
 		if (!store.isEmptyStore) {
             var me = this,
                 result = {
@@ -349,7 +351,7 @@ Ext.define('Mention.Field', {
      * Once query is executed, process extra logic
      * @param {Object} queryPlan
      */
-    afterQuery: function(queryPlan) {
+    afterQuery: function (queryPlan) {
         var me = this;
         me.expand();
         if (me.store.getCount()) {
@@ -365,7 +367,7 @@ Ext.define('Mention.Field', {
     /**
      * Handler for delayed query task
      */
-    doRawQuery: function() {
+    doRawQuery: function () {
         var me = this,
             rawValue = me.getQuery().value;
 		// run query
@@ -377,14 +379,14 @@ Ext.define('Mention.Field', {
      * @param {Ext.EventObject} e
      * @param {Object} eOpts
      */
-    onFieldBlur: function(field, e, eOpts) {
+    onFieldBlur: function (field, e, eOpts) {
         this.collapse();
     },
     /**
      * Handler for field render
      * @param {Ext.form.field.Jira} field The field that was blurred
      */
-    onFieldRender: function() {
+    onFieldRender: function () {
         var me = this;
         // if key events not enabled, add keyup listener
         if (!me.enableKeyEvents) {
@@ -401,7 +403,7 @@ Ext.define('Mention.Field', {
      * @param {Ext.EventObject} e
      * @param {Ext.Element} target
      */
-    onKeyDown: function(e, target) {
+    onKeyDown: function (e, target) {
         var me = this,
             lookup = me.getLookupPosition();
         
@@ -416,7 +418,7 @@ Ext.define('Mention.Field', {
      * @param {Ext.EventObject} e
      * @param {Ext.Element} target
      */
-    onKeyUp: function(e, target) {
+    onKeyUp: function (e, target) {
         var me = this,
             lookup = me.getLookupPosition();
         if (lookup.position > -1) {
@@ -442,7 +444,7 @@ Ext.define('Mention.Field', {
      * @param {Ext.EventObject} e
      * @param {Ext.Element} target
      */
-    onMouseUp: function(e, target) {
+    onMouseUp: function (e, target) {
         var me = this,
             lookup = me.getLookupPosition();
         if (lookup.position > -1) {
@@ -461,20 +463,20 @@ Ext.define('Mention.Field', {
      * @param {Ext.EventObject} e
      * @param {Ext.Element} target
      */
-    onEsc: function() {
+    onEsc: function () {
         this.collapse();
     },
     /**
      * Run cleanup on this field when destroyed
      */
-    onDestroy: function() {
+    onDestroy: function () {
         var me = this;
         me.doQueryTask.cancel();
         me.bindStore(null);
         me.valueCollection = Ext.destroy(me.valueCollection);
         me.callParent();
     }
-}, function() {
+}, function () {
     /** 
     	For this custom field, we want the built-in goodness of a picker, but not all the default 
         stuff that extending a combobox would bring. So instead of extending combobox, we'll 
